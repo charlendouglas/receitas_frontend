@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Receita</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Gerador de Receita</h1>
+
+  <form id="formIngredientes">
+    <input type="text" id="alimento" placeholder="Nome do alimento" required>
+    <input type="number" id="quantidade" placeholder="Quantidade" required>
+    <select id="unidade">
+      <option value="kg">kg</option>
+      <option value="g">g</option>
+      <option value="ml">ml</option>
+      <option value="litros">litros</option>
+      <option value="xícaras">xícaras</option>
+      <option value="colheres">colheres</option>
+      <option value="unidade">unidade</option>
+    </select>
+    <button type="button" onclick="adicionarIngrediente()">Adicionar</button>
+  </form>
+
+  <div class="ingredientes">
+    <h3>Ingredientes adicionados:</h3>
+    <ul id="listaIngredientes"></ul>
+  </div>
+
+  <button onclick="gerarReceita()">Gerar Receita</button>
+
+  <div class="receita" id="receita" style="display:none;">
+    <h2>Receita Criada</h2>
+    <p id="textoReceita"></p>
+    <button id="btnSalvarReceita" onclick="salvarReceita()" style="display:none;">Salvar Receita</button>
+  </div>
+
+  <script>
+    let ingredientes = [];
+
+    function adicionarIngrediente() {
+      const alimento = document.getElementById("alimento").value;
+      const quantidade = document.getElementById("quantidade").value;
+      const unidade = document.getElementById("unidade").value;
+
+      if (alimento && quantidade && unidade) {
+        ingredientes.push({ alimento, quantidade, unidade });
+        atualizarLista();
+        document.getElementById("alimento").value = "";
+        document.getElementById("quantidade").value = "";
+      }
+    }
+
+    function atualizarLista() {
+      const lista = document.getElementById("listaIngredientes");
+      lista.innerHTML = "";
+      ingredientes.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.quantidade} ${item.unidade} de ${item.alimento}`;
+        lista.appendChild(li);
+      });
+    }
+
+    async function gerarReceita() {
+      if (ingredientes.length === 0) {
+        alert("Adicione pelo menos um ingrediente!");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/gerar-receitas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ingredientes })
+        });
+
+        if (!response.ok) throw new Error("Erro ao gerar receita");
+
+        const data = await response.json();
+        document.getElementById("textoReceita").textContent = data.receita;
+        document.getElementById("receita").style.display = "block";
+        document.getElementById("btnSalvarReceita").style.display = "inline-block";
+
+      } catch (error) {
+        console.error(error);
+        alert("Falha ao gerar receita. Tente novamente.");
+      }
+    }
+
+    async function salvarReceita() {
+      const receita = document.getElementById("textoReceita").textContent;
+      if (!receita) {
+        alert("Não há receita para salvar!");
+        return;
+      }
+
+      const salvar = confirm("Deseja salvar esta receita?");
+      if (!salvar) return;
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/salvar-receita", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ receita, ingredientes })
+        });
+
+        if (!response.ok) throw new Error("Erro ao salvar receita");
+
+        const data = await response.json();
+        alert("Receita salva com sucesso! ID: " + data.id);
+
+      } catch (error) {
+        console.error(error);
+        alert("Falha ao salvar receita. Tente novamente.");
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
