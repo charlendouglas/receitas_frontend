@@ -30,6 +30,9 @@
 
   <button onclick="gerarReceita()">Gerar Receita</button>
 
+  <!-- Status de carregamento -->
+  <div id="status" style="display:none; margin-top: 10px; font-weight: bold;">Gerando receita...</div>
+
   <div class="receita" id="receita" style="display:none;">
     <h2>Receita Criada</h2>
     <p id="textoReceita"></p>
@@ -68,6 +71,10 @@
         return;
       }
 
+      const status = document.getElementById("status");
+      status.textContent = "Gerando receita...";
+      status.style.display = "block";
+
       try {
         const response = await fetch("http://127.0.0.1:8000/api/gerar-receitas", {
           method: "POST",
@@ -78,6 +85,7 @@
         if (!response.ok) throw new Error("Erro ao gerar receita");
 
         const data = await response.json();
+
         document.getElementById("textoReceita").textContent = data.receita;
         document.getElementById("receita").style.display = "block";
         document.getElementById("btnSalvarReceita").style.display = "inline-block";
@@ -85,6 +93,8 @@
       } catch (error) {
         console.error(error);
         alert("Falha ao gerar receita. Tente novamente.");
+      } finally {
+        status.style.display = "none";
       }
     }
 
@@ -118,6 +128,7 @@
   </script>
 </body>
 </html>
+
 
 
 
